@@ -49,7 +49,7 @@ def calculate_profile(profile_id: int):
         df["solar_invest_eur"] = [0]
         df["solar_annuity_eur"] = [0]
         df["solar_capacity_kwp"] = [0]
-        df["total_yearly_costs_eur"] = df["energy_cost_eur"] + df["grid_energy_cost_eur"] + df["grid_capacity_cost_eur"]
+        df["total_yearly_costs_eur"] = df["energy_costs_eur"] + df["grid_energy_costs_eur"] + df["grid_capacity_costs_eur"]
         df["total_annuity_eur"] = [0]
         df["total_invest_eur"] = [0]
 
