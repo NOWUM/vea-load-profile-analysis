@@ -1,5 +1,8 @@
 import os
 import logging
+import sys
+
+from multiprocessing import Pool
 
 import pandas as pd
 from peakshaving_analyzer import load_oeds_config, PeakShavingAnalyzer
@@ -7,13 +10,9 @@ from peakshaving_analyzer import load_oeds_config, PeakShavingAnalyzer
 from dotenv import load_dotenv
 load_dotenv()
 
-def calculate_baselines():
-    URI = os.getenv("DB_URI")
+URI = os.getenv("DB_URI")
 
-    max_id = pd.read_sql("SELECT id FROM vea_industrial_load_profiles.master", URI)["id"].max()
-    profile_ids = list(range(max_id + 1))
-
-    for profile_id in profile_ids:
+def optimize_profile(profile_id: int):
         try:
             log.info(f"Calculating baseline for {profile_id=}")
             config = load_oeds_config(
@@ -30,6 +29,25 @@ def calculate_baselines():
         except Exception as e:
             log.error(e)
 
+def calculate_baselines(n_processes):
+
+    max_id = pd.read_sql("SELECT id FROM vea_industrial_load_profiles.master", URI)["id"].max()
+    profile_ids = list(range(max_id + 1))
+
+    with Pool(processes=n_processes) as pool:
+        pool.map(optimize_profile, profile_ids)
+
 if __name__ == "__main__":
+    logging.basicConfig(
+        format='%(asctime)s %(levelname)-8s %(message)s',
+        level=logging.INFO,
+        datefmt='%Y-%m-%d %H:%M:%S')
     log = logging.getLogger(__name__)
-    calculate_baselines()
+
+    if len(sys.argv) > 1:
+        n_processes = int(sys.argv[1])
+    else:
+         n_processes=2
+
+    log.info(f"Starting calculation of all profiles with {n_processes=}")
+    calculate_baselines(n_processes)
