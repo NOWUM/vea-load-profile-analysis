@@ -27,6 +27,7 @@ def optimize_profile(profile_id: int):
             storage_charge_rate=5,
             storage_discharge_rate=5,
             add_storage=True,
+            add_solar=False,
             solver="gurobi",
             verbose=True)
         psa = PeakShavingAnalyzer(config=config)
