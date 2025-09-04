@@ -29,7 +29,7 @@ def optimize_profile(profile_id: int):
             add_storage=True,
             add_solar=False,
             solver="gurobi",
-            verbose=True)
+            verbose=False)
         psa = PeakShavingAnalyzer(config=config)
         results = psa.optimize()
         results.to_sql(connection=URI, schema="vea_results")
@@ -48,7 +48,7 @@ def calculate_baselines(n_processes):
 if __name__ == "__main__":
     logging.basicConfig(
         format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging.INFO,
+        level=logging.ERROR,
         datefmt='%Y-%m-%d %H:%M:%S')
     log = logging.getLogger(__name__)
 
