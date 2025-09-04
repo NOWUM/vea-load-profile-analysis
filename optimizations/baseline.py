@@ -36,9 +36,9 @@ def calculate_profile(profile_id: int):
 
         df = pd.DataFrame()
         df["name"] = [str(profile_id) + "_baseline"]
-        df["energy_cost_eur"] = [config.producer_energy_price * config.consumption_timeseries.sum() * config.hours_per_timestep]
-        df["grid_energy_cost_eur"] = [config.grid_energy_price * config.consumption_timeseries.sum() * config.hours_per_timestep]
-        df["grid_capacity_cost_eur"] = [config.grid_capacity_price * config.consumption_timeseries.max()]
+        df["energy_costs_eur"] = [config.producer_energy_price * config.consumption_timeseries.sum() * config.hours_per_timestep]
+        df["grid_energy_costs_eur"] = [config.grid_energy_price * config.consumption_timeseries.sum() * config.hours_per_timestep]
+        df["grid_capacity_costs_eur"] = [config.grid_capacity_price * config.consumption_timeseries.max()]
         df["grid_capacity_kw"] = [config.consumption_timeseries.max()]
         df["storage_invest_eur"] = [0]
         df["storage_annuity_eur"] = [0]
