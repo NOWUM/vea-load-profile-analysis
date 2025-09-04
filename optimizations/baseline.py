@@ -29,7 +29,7 @@ def calculate_profile(profile_id: int):
             storage_discharge_efficiency=0.95,
             storage_charge_rate=5,
             storage_discharge_rate=5,
-            add_storage=True,
+            add_storage=False,
             add_solar=False,
             solver="gurobi",
             verbose=False)
