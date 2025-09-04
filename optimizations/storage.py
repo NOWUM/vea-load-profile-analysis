@@ -13,21 +13,28 @@ load_dotenv()
 URI = os.getenv("DB_URI")
 
 def optimize_profile(profile_id: int):
-        try:
-            log.info(f"Calculating baseline for {profile_id=}")
-            config = load_oeds_config(
-                con=URI,
-                profile_id=profile_id,
-                name=f"{profile_id}_storage",
-                add_storage=True,
-                solver="gurobi",
-                verbose=True)
-            psa = PeakShavingAnalyzer(config=config)
-            results = psa.optimize()
-            results.to_sql(connection=URI, schema="vea_results")
-            
-        except Exception as e:
-            log.error(e)
+    try:
+        log.info(f"Calculating baseline for {profile_id=}")
+        config = load_oeds_config(
+            con=URI,
+            profile_id=profile_id,
+            name=f"{profile_id}_storage",
+            producer_energy_price=0.18,
+            storage_cost_per_kwh=285,
+            interest_rate=2,
+            storage_charge_efficiency=0.95,
+            storage_discharge_efficiency=0.95,
+            storage_charge_rate=5,
+            storage_discharge_rate=5,
+            add_storage=True,
+            solver="gurobi",
+            verbose=True)
+        psa = PeakShavingAnalyzer(config=config)
+        results = psa.optimize()
+        results.to_sql(connection=URI, schema="vea_results")
+
+    except Exception as e:
+        log.error(e)
 
 def calculate_baselines(n_processes):
 
