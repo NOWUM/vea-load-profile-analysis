@@ -53,9 +53,7 @@ def calculate_profile(profile_id: int):
         df["total_annuity_eur"] = [0]
         df["total_invest_eur"] = [0]
 
-        return df
-
-        # df.to_sql(name="overview", con=URI, schema="vea_results", if_exists="append", index=False)
+        df.to_sql(name="overview", con=URI, schema="vea_results", if_exists="append", index=False)
 
     except Exception as e:
         raise e
