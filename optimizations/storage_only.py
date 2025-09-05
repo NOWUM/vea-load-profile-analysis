@@ -18,7 +18,7 @@ def optimize_profile(profile_id: int):
         config = load_oeds_config(
             con=URI,
             profile_id=profile_id,
-            name=f"{profile_id}_storage",
+            name=f"{profile_id}_storage_only",
             producer_energy_price=0.18,
             storage_cost_per_kwh=285,
             interest_rate=2,
