@@ -198,8 +198,6 @@ def compare(uri: str, images_dir: str | Path):
     perc_profiles_3pct_yearly_savings = (n_profiles_3pct_yearly_savings / len(perc_yearly_savings)) * 100
     print(f"Percentage of profiles with more than 3% yearly savings: {perc_profiles_3pct_yearly_savings:.2f} %")
 
-
-
     perc_yearly_savings_fig_df = pd.DataFrame()
     perc_yearly_savings_fig_df["Savings"] = perc_yearly_savings.copy()
     perc_yearly_savings_fig_df = perc_yearly_savings_fig_df.rename(columns={"Savings": "Savings"})
