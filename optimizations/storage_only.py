@@ -14,7 +14,7 @@ URI = os.getenv("DB_URI")
 
 def optimize_profile(profile_id: int):
     try:
-        log.info(f"Calculating baseline for {profile_id=}")
+        log.info(f"Calculating storage_only for {profile_id=}")
         config = load_oeds_config(
             con=URI,
             profile_id=profile_id,
