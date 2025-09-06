@@ -86,14 +86,13 @@ def compare(uri: str, images_dir: str | Path):
     print(f"{q95_inverter_size=:.2f} kW")
 
     battery_size_fig_df = profiles_using_storage.copy()
-    battery_size_fig_df = battery_size_fig_df[battery_size_fig_df[stor_cap_col] <= q95_storage_size]
-    battery_size_fig_df = battery_size_fig_df[battery_size_fig_df[inv_cap_col] <= q95_inverter_size]
     battery_size_fig_df = battery_size_fig_df.rename(columns={stor_cap_col: "Storage", inv_cap_col: "Inverter"})
     battery_size_fig = px.box(
         data_frame=battery_size_fig_df,
         x=["Inverter", "Storage"],
-        title="Battery system sizes for 95%-quantile")
+        title="Battery system sizes")
     battery_size_fig.update_layout(xaxis_title="Capacity in kWh (storage) / kW (inverter)", yaxis_title="")
+    battery_size_fig.update_xaxes(range=[0, 200])
     battery_size_fig.write_image(f"{images_dir}/battery_size_box.pdf")
     battery_size_fig.show()
 
@@ -127,14 +126,13 @@ def compare(uri: str, images_dir: str | Path):
     print(f"{q95_inverter_invest=:.2f} €")
 
     battery_investments_fig_df = profiles_using_storage.copy()
-    battery_investments_fig_df = battery_investments_fig_df[battery_investments_fig_df[stor_inv_col] <= q95_storage_invest]
-    battery_investments_fig_df = battery_investments_fig_df[battery_investments_fig_df[inv_invest_col] <= q95_inverter_invest]
     battery_investments_fig_df = battery_investments_fig_df.rename(columns={stor_inv_col: "Storage", inv_invest_col: "Inverter"})
     battery_investments_fig = px.box(
         data_frame=battery_investments_fig_df,
         x=["Inverter", "Storage"],
-        title="Battery system investments for 95%-quantile")
+        title="Battery system investments")
     battery_investments_fig.update_layout(xaxis_title="Storage system investments in €", yaxis_title="")
+    battery_investments_fig.update_xaxes(range=[0, 50000])
     battery_investments_fig.write_image(f"{images_dir}/battery_investments_box.pdf")
     battery_investments_fig.show()
 
@@ -161,13 +159,13 @@ def compare(uri: str, images_dir: str | Path):
     print(f"{q95_total_yearly_savings=:.2f} €")
 
     total_yearly_savings_fig_df = abs_diff.copy()
-    total_yearly_savings_fig_df = total_yearly_savings_fig_df[total_yearly_savings_fig_df[tot_y_sav_col] <= q95_total_yearly_savings]
     total_yearly_savings_fig_df = total_yearly_savings_fig_df.rename(columns={tot_y_sav_col: "Savings"})
     total_yearly_savings_fig = px.box(
         data_frame=total_yearly_savings_fig_df,
-        x=["Savings"],
-        title="Total yearly savings for 95%-quantile")
+        x="Savings",
+        title="Total yearly savings")
     total_yearly_savings_fig.update_layout(xaxis_title="Total yearly savings in €", yaxis_title="")
+    total_yearly_savings_fig.update_xaxes(range=[0, 10000])
     total_yearly_savings_fig.write_image(f"{images_dir}/total_yearly_savings_box.pdf")
     total_yearly_savings_fig.show()
 
@@ -204,13 +202,13 @@ def compare(uri: str, images_dir: str | Path):
 
     perc_yearly_savings_fig_df = pd.DataFrame()
     perc_yearly_savings_fig_df["Savings"] = perc_yearly_savings.copy()
-    perc_yearly_savings_fig_df = perc_yearly_savings_fig_df[perc_yearly_savings_fig_df["Savings"] <= q95_perc_yearly_savings]
     perc_yearly_savings_fig_df = perc_yearly_savings_fig_df.rename(columns={"Savings": "Savings"})
     perc_yearly_savings_fig = px.box(
         data_frame=perc_yearly_savings_fig_df,
         x="Savings",
-        title="Relative yearly savings for 95%-quantile")
+        title="Relative yearly savings")
     perc_yearly_savings_fig.update_layout(xaxis_title="Relative yearly savings in %", yaxis_title="")
+    perc_yearly_savings_fig.update_xaxes(range=[0, 6])
     perc_yearly_savings_fig.write_image(f"{images_dir}/perc_yearly_savings_box.pdf")
     perc_yearly_savings_fig.show()
 
@@ -230,15 +228,16 @@ def compare(uri: str, images_dir: str | Path):
     q95_yearly_cap_cost_savings = abs_diff[yearly_cap_cost_sav_col].quantile(0.95)
     print(f"{q95_yearly_cap_cost_savings=:.2f} €")
 
-    fig_df = abs_diff.copy()
-    fig_df = fig_df[fig_df[yearly_cap_cost_sav_col] <= q95_yearly_cap_cost_savings]
-    fig_df = fig_df.rename(columns={yearly_cap_cost_sav_col: "Savings"})
-    fig = px.box(
-        data_frame=fig_df,
+    total_cap_saving_fig_df = abs_diff.copy()
+    total_cap_saving_fig_df = total_cap_saving_fig_df.rename(columns={yearly_cap_cost_sav_col: "Savings"})
+    total_cap_savings_fig = px.box(
+        data_frame=total_cap_saving_fig_df,
         x="Savings",
-        title="Yearly capacity costs savings for 95%-quantile")
-    fig.update_layout(xaxis_title="Total yearly capacity costs savings in €", yaxis_title="")
-    fig.show()
+        title="Yearly capacity costs savings")
+    total_cap_savings_fig.update_layout(xaxis_title="Savings in €", yaxis_title="")
+    total_cap_savings_fig.update_xaxes(range=[0, 10e3])
+    total_cap_savings_fig.write_image(f"{images_dir}/total_capacity_costs_savings_box.pdf")
+    total_cap_savings_fig.show()
 
     print("")
     print("########################################")
@@ -265,15 +264,16 @@ def compare(uri: str, images_dir: str | Path):
     perc_profiles_2pct_yearly_cap_cost_savings = (len(perc_yearly_cap_cost_savings[perc_yearly_cap_cost_savings > 2]) / len(perc_yearly_savings)) * 100
     print(f"Percentage of profiles with more than 2% yearly savings: {perc_profiles_2pct_yearly_cap_cost_savings:.2f} %")
 
-    fig_df = pd.DataFrame()
-    fig_df["Savings"] = perc_yearly_cap_cost_savings.copy()
-    fig_df = fig_df[fig_df["Savings"] <= q95_perc_yearly_cap_cost_savings]
-    fig = px.box(
-        data_frame=fig_df,
+    rel_cap_savings_fig_df = pd.DataFrame()
+    rel_cap_savings_fig_df["Savings"] = perc_yearly_cap_cost_savings.copy()
+    rel_cap_savings_fig = px.box(
+        data_frame=rel_cap_savings_fig_df,
         x="Savings",
-        title="Relative yearly capacity cost savings for 95%-quantile")
-    fig.update_layout(xaxis_title="Relative yearly capacity cost savings in %", yaxis_title="")
-    fig.show()
+        title="Relative yearly capacity cost savings")
+    rel_cap_savings_fig.update_layout(xaxis_title="Savings in %", yaxis_title="")
+    rel_cap_savings_fig.update_xaxes(range=[0, 6])
+    rel_cap_savings_fig.write_image(f"{images_dir}/rel_capacity_costs_savings_box.pdf")
+    rel_cap_savings_fig.show()
 
     print("")
     print("#################################")
@@ -298,7 +298,7 @@ def compare(uri: str, images_dir: str | Path):
         "solar_annuity_eur",
         "solar_capacity_kwp"]
     abs_correlations_df = abs_diff_with_master.drop(columns=cols_to_drop).corr()
-    fig = px.imshow(abs_correlations_df, title="Correlation coefficients")
+    fig = px.imshow(abs_correlations_df, title="Correlation coefficients for absolute yearly savings")
     fig.show()
 
     # show correlation coefficients
