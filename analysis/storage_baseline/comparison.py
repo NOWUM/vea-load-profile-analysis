@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
@@ -9,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def compare(uri: str):
+def compare(uri: str, images_dir: str | Path):
     # get master data
     master = pd.read_sql("SELECT * FROM vea_industrial_load_profiles.master", uri)
     master.set_index("id", inplace=True)
@@ -84,16 +85,17 @@ def compare(uri: str):
     q95_inverter_size = profiles_using_storage[inv_cap_col].quantile(0.95)
     print(f"{q95_inverter_size=:.2f} kW")
 
-    fig_df = profiles_using_storage.copy()
-    fig_df = fig_df[fig_df[stor_cap_col] <= q95_storage_size]
-    fig_df = fig_df[fig_df[inv_cap_col] <= q95_inverter_size]
-    fig_df = fig_df.rename(columns={stor_cap_col: "Storage", inv_cap_col: "Inverter"})
-    fig = px.box(
-        data_frame=fig_df,
+    battery_size_fig_df = profiles_using_storage.copy()
+    battery_size_fig_df = battery_size_fig_df[battery_size_fig_df[stor_cap_col] <= q95_storage_size]
+    battery_size_fig_df = battery_size_fig_df[battery_size_fig_df[inv_cap_col] <= q95_inverter_size]
+    battery_size_fig_df = battery_size_fig_df.rename(columns={stor_cap_col: "Storage", inv_cap_col: "Inverter"})
+    battery_size_fig = px.box(
+        data_frame=battery_size_fig_df,
         x=["Inverter", "Storage"],
         title="Battery system sizes for 95%-quantile")
-    fig.update_layout(xaxis_title="Capacity in kWh (storage) / kW (inverter)", yaxis_title="")
-    fig.show()
+    battery_size_fig.update_layout(xaxis_title="Capacity in kWh (storage) / kW (inverter)", yaxis_title="")
+    battery_size_fig.write_image(f"{images_dir}/battery_size_box.pdf")
+    battery_size_fig.show()
 
     print("")
     print("################################")
@@ -124,16 +126,17 @@ def compare(uri: str):
     q95_inverter_invest = profiles_using_storage[inv_invest_col].quantile(0.95)
     print(f"{q95_inverter_invest=:.2f} €")
 
-    fig_df = profiles_using_storage.copy()
-    fig_df = fig_df[fig_df[stor_inv_col] <= q95_storage_invest]
-    fig_df = fig_df[fig_df[inv_invest_col] <= q95_inverter_invest]
-    fig_df = fig_df.rename(columns={stor_inv_col: "Storage", inv_invest_col: "Inverter"})
-    fig = px.box(
-        data_frame=fig_df,
+    battery_investments_fig_df = profiles_using_storage.copy()
+    battery_investments_fig_df = battery_investments_fig_df[battery_investments_fig_df[stor_inv_col] <= q95_storage_invest]
+    battery_investments_fig_df = battery_investments_fig_df[battery_investments_fig_df[inv_invest_col] <= q95_inverter_invest]
+    battery_investments_fig_df = battery_investments_fig_df.rename(columns={stor_inv_col: "Storage", inv_invest_col: "Inverter"})
+    battery_investments_fig = px.box(
+        data_frame=battery_investments_fig_df,
         x=["Inverter", "Storage"],
         title="Battery system investments for 95%-quantile")
-    fig.update_layout(xaxis_title="Storage system investments in €", yaxis_title="")
-    fig.show()
+    battery_investments_fig.update_layout(xaxis_title="Storage system investments in €", yaxis_title="")
+    battery_investments_fig.write_image(f"{images_dir}/battery_investments_box.pdf")
+    battery_investments_fig.show()
 
     # calculate difference between both scenarios
     abs_diff = baseline.drop(columns="name") - storage.drop(columns="name")
@@ -157,15 +160,16 @@ def compare(uri: str):
     q95_total_yearly_savings = abs_diff[tot_y_sav_col].quantile(0.95)
     print(f"{q95_total_yearly_savings=:.2f} €")
 
-    fig_df = abs_diff.copy()
-    fig_df = fig_df[fig_df[tot_y_sav_col] <= q95_total_yearly_savings]
-    fig_df = fig_df.rename(columns={tot_y_sav_col: "Savings"})
-    fig = px.box(
-        data_frame=fig_df,
+    total_yearly_savings_fig_df = abs_diff.copy()
+    total_yearly_savings_fig_df = total_yearly_savings_fig_df[total_yearly_savings_fig_df[tot_y_sav_col] <= q95_total_yearly_savings]
+    total_yearly_savings_fig_df = total_yearly_savings_fig_df.rename(columns={tot_y_sav_col: "Savings"})
+    total_yearly_savings_fig = px.box(
+        data_frame=total_yearly_savings_fig_df,
         x=["Savings"],
         title="Total yearly savings for 95%-quantile")
-    fig.update_layout(xaxis_title="Total yearly savings in €", yaxis_title="")
-    fig.show()
+    total_yearly_savings_fig.update_layout(xaxis_title="Total yearly savings in €", yaxis_title="")
+    total_yearly_savings_fig.write_image(f"{images_dir}/total_yearly_savings_box.pdf")
+    total_yearly_savings_fig.show()
 
     print("")
     print("################################")
@@ -198,16 +202,17 @@ def compare(uri: str):
 
 
 
-    fig_df = pd.DataFrame()
-    fig_df["Savings"] = perc_yearly_savings.copy()
-    fig_df = fig_df[fig_df["Savings"] <= q95_perc_yearly_savings]
-    fig_df = fig_df.rename(columns={"Savings": "Savings"})
-    fig = px.box(
-        data_frame=fig_df,
+    perc_yearly_savings_fig_df = pd.DataFrame()
+    perc_yearly_savings_fig_df["Savings"] = perc_yearly_savings.copy()
+    perc_yearly_savings_fig_df = perc_yearly_savings_fig_df[perc_yearly_savings_fig_df["Savings"] <= q95_perc_yearly_savings]
+    perc_yearly_savings_fig_df = perc_yearly_savings_fig_df.rename(columns={"Savings": "Savings"})
+    perc_yearly_savings_fig = px.box(
+        data_frame=perc_yearly_savings_fig_df,
         x="Savings",
         title="Relative yearly savings for 95%-quantile")
-    fig.update_layout(xaxis_title="Relative yearly savings in %", yaxis_title="")
-    fig.show()
+    perc_yearly_savings_fig.update_layout(xaxis_title="Relative yearly savings in %", yaxis_title="")
+    perc_yearly_savings_fig.write_image(f"{images_dir}/perc_yearly_savings_box.pdf")
+    perc_yearly_savings_fig.show()
 
     print("")
     print("#####################################")
@@ -297,15 +302,16 @@ def compare(uri: str):
     fig.show()
 
     # show correlation coefficients
-    fig_df = abs_correlations_df[["total_yearly_costs_eur"]].round(2)
-    fig_df.sort_values("total_yearly_costs_eur", inplace=True, ascending=False)
-    fig = px.bar(
-        data_frame=fig_df,
+    abs_corr_fig_df = abs_correlations_df[["total_yearly_costs_eur"]].round(2)
+    abs_corr_fig_df.sort_values("total_yearly_costs_eur", inplace=True, ascending=False)
+    abs_corr_fig = px.bar(
+        data_frame=abs_corr_fig_df,
         y="total_yearly_costs_eur",
         text_auto=True,
         title="Correlation between different load profile characteristics and total yearly savings")
-    fig.update_layout(yaxis_title="Correlation coefficients", xaxis_title="Variable")
-    fig.show()
+    abs_corr_fig.update_layout(yaxis_title="Correlation coefficients", xaxis_title="Variable")
+    abs_corr_fig.write_image(f"{images_dir}/abs_corr_bar.pdf")
+    abs_corr_fig.show()
 
     # table showing absolute correlations
     df = pd.DataFrame()
@@ -346,15 +352,17 @@ def compare(uri: str):
     fig.show()
 
     # bar plot showing relative correlations
-    fig_df = rel_correlations_df[["total_yearly_costs_eur"]].round(2)
-    fig_df.sort_values("total_yearly_costs_eur", inplace=True, ascending=False)
-    fig_df.dropna(inplace=True)
-    fig = px.bar(
-        data_frame=fig_df,
+    rel_corr_fig_df = rel_correlations_df[["total_yearly_costs_eur"]].round(2)
+    rel_corr_fig_df.sort_values("total_yearly_costs_eur", inplace=True, ascending=False)
+    rel_corr_fig_df.dropna(inplace=True)
+    rel_corr_fig = px.bar(
+        data_frame=rel_corr_fig_df,
         y="total_yearly_costs_eur",
         text_auto=True,
         title="Correlation between different load profile characteristics and relative yearly savings")
-    fig.update_layout(yaxis_title="Correlation coefficient", xaxis_title="Variable")
+    rel_corr_fig.update_layout(yaxis_title="Correlation coefficient", xaxis_title="Variable")
+    rel_corr_fig.write_image(f"{images_dir}/rel_corr_bar.pdf")
+    rel_corr_fig.show()
 
     # table showing relative correlations
     df = pd.DataFrame()
@@ -385,4 +393,8 @@ if __name__ == "__main__":
     # load DB URI
     uri = os.getenv("DB_URI")
 
-    compare(uri=uri)
+    images_dir = Path(__file__).parent / Path("images")
+    if not os.path.exists(images_dir):
+        os.mkdir(images_dir)
+
+    compare(uri=uri, images_dir=images_dir)
