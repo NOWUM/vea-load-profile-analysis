@@ -136,6 +136,46 @@ def compare(uri: str, images_dir: str | Path):
     battery_investments_fig.write_image(f"{images_dir}/battery_investments_box.pdf")
     battery_investments_fig.show()
 
+    print("")
+    print("################################")
+    print("#    battery system annuity    #")
+    print("################################")
+    stor_ann_col = "storage_annuity_eur"
+    median_storage_annuity = profiles_using_storage[stor_ann_col].median()
+    print(f"{median_storage_annuity=:.2f} €")
+    mean_storage_annuity = profiles_using_storage[stor_ann_col].mean()
+    print(f"{mean_storage_annuity=:.2f} €")
+    min_storage_annuity = profiles_using_storage[stor_ann_col].min()
+    print(f"{min_storage_annuity=:.2f} €")
+    max_storage_annuity = profiles_using_storage[stor_ann_col].max()
+    print(f"{max_storage_annuity=:.2f} €")
+    q95_storage_annuity = profiles_using_storage[stor_ann_col].quantile(0.95)
+    print(f"{q95_storage_annuity=:.2f} €")
+
+    print("----------------------------------")
+    inv_ann_col = "inverter_annuity_eur"
+    median_inverter_invest = profiles_using_storage[inv_ann_col].median()
+    print(f"{median_inverter_invest=:.2f} €")
+    mean_inverter_invest = profiles_using_storage[inv_ann_col].mean()
+    print(f"{mean_inverter_invest=:.2f} €")
+    min_inverter_invest = profiles_using_storage[inv_ann_col].min()
+    print(f"{min_inverter_invest=:.2f} €")
+    max_inverter_invest = profiles_using_storage[inv_ann_col].max()
+    print(f"{max_inverter_invest=:.2f} €")
+    q95_inverter_invest = profiles_using_storage[inv_ann_col].quantile(0.95)
+    print(f"{q95_inverter_invest=:.2f} €")
+
+    battery_annuity_fig_df = profiles_using_storage.copy()
+    battery_annuity_fig_df = battery_annuity_fig_df.rename(columns={stor_ann_col: "Storage", inv_ann_col: "Inverter"})
+    battery_annuity_fig = px.box(
+        data_frame=battery_annuity_fig_df,
+        x=["Inverter", "Storage"],
+        title="Battery system annuity")
+    battery_annuity_fig.update_layout(xaxis_title="Storage system annuity in €", yaxis_title="")
+    battery_annuity_fig.update_xaxes(range=[0, 3000])
+    battery_annuity_fig.write_image(f"{images_dir}/battery_annuity_box.pdf")
+    battery_annuity_fig.show()
+
     # calculate difference between both scenarios
     abs_diff = baseline.drop(columns="name") - storage.drop(columns="name")
 
