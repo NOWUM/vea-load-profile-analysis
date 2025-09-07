@@ -132,12 +132,14 @@ def compare(uri: str, images_dir: str | Path):
     print("#     total yearly savings     #")
     print("################################")
     abs_diff = baseline.drop(columns="name") - storage_pv.drop(columns="name")
-    print(abs_diff.head())
+    # drop those that could not be optimized
+    abs_diff.dropna(subset="total_yearly_costs_eur", inplace=True)
+    print(abs_diff.head().to_markdown())
 
     rel_diff = (baseline.drop(columns="name") - storage_pv.drop(columns="name")) / baseline.drop(columns="name")
     # drop those that could not be optimized
     rel_diff.dropna(subset="total_yearly_costs_eur", inplace=True)
-    print(rel_diff.head())
+    print(rel_diff.head().to_markdown())
 
     abs_yearly_savings = abs_diff["total_yearly_costs_eur"].copy()
     abs_yearly_savings.name = "Total yearly savings in Eur"

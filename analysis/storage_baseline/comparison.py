@@ -144,8 +144,11 @@ def compare(uri: str, images_dir: str | Path):
 
     # calculate difference between both scenarios
     abs_diff = baseline.drop(columns="name") - storage.drop(columns="name")
+    # drop those that could not be optimized
+    abs_diff.dropna(subset="total_yearly_costs_eur", inplace=True)
 
     rel_diff = (baseline.drop(columns="name") - storage.drop(columns="name")) / baseline.drop(columns="name")
+    # drop those that could not be optimized
     rel_diff.dropna(subset="total_yearly_costs_eur", inplace=True)
 
     print("")
