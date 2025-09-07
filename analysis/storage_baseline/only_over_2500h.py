@@ -37,10 +37,14 @@ def compare(uri: str, images_dir: str | Path):
 
     print(master.head().to_markdown())
 
+    # filter by profiles with less than 2500 Full load hours
+    profiles_over_2500h = master[master["is_over_2500h"]].index
+
     # get baseline data
     baseline = pd.read_sql("SELECT * FROM vea_results.overview WHERE name LIKE '%%base%%'", uri)
     baseline["id"] = baseline["name"].str.split("_").str[0].astype(int)
     baseline.set_index("id", inplace=True)
+    baseline = baseline[baseline.index.isin(profiles_over_2500h)]
     baseline.sort_index(inplace=True)
     print(baseline.head().to_markdown())
 
@@ -48,6 +52,7 @@ def compare(uri: str, images_dir: str | Path):
     storage = pd.read_sql("SELECT * FROM vea_results.overview WHERE name LIKE '%%storage_only'", uri)
     storage["id"] = storage["name"].str.split("_").str[0].astype(int)
     storage.set_index("id", inplace=True)
+    storage = storage[storage.index.isin(profiles_over_2500h)]
     storage.sort_index(inplace=True)
     print(storage.head().to_markdown())
 
@@ -86,7 +91,7 @@ def compare(uri: str, images_dir: str | Path):
         x=["Inverter", "Storage"],
         title="Battery system sizes")
     battery_size_fig.update_layout(xaxis_title="Capacity in kWh (storage) / kW (inverter)", yaxis_title="")
-    battery_size_fig.update_xaxes(range=[0, 200])
+    battery_size_fig.update_xaxes(range=[0, 100])
     battery_size_fig.write_image(f"{images_dir}/battery_size_box.pdf")
     battery_size_fig.show()
 
@@ -112,7 +117,7 @@ def compare(uri: str, images_dir: str | Path):
         x=["Inverter", "Storage"],
         title="Battery system investments")
     battery_investments_fig.update_layout(xaxis_title="Investments in €", yaxis_title="")
-    battery_investments_fig.update_xaxes(range=[0, 50000])
+    battery_investments_fig.update_xaxes(range=[0, 20e3])
     battery_investments_fig.write_image(f"{images_dir}/battery_investments_box.pdf")
     battery_investments_fig.show()
 
@@ -138,7 +143,7 @@ def compare(uri: str, images_dir: str | Path):
         x=["Inverter", "Storage"],
         title="Battery system annuity")
     battery_annuity_fig.update_layout(xaxis_title="Annuity in €", yaxis_title="")
-    battery_annuity_fig.update_xaxes(range=[0, 3000])
+    battery_annuity_fig.update_xaxes(range=[0, 1500])
     battery_annuity_fig.write_image(f"{images_dir}/battery_annuity_box.pdf")
     battery_annuity_fig.show()
 
@@ -147,16 +152,35 @@ def compare(uri: str, images_dir: str | Path):
     # drop those that could not be optimized
     abs_diff.dropna(subset="total_yearly_costs_eur", inplace=True)
 
+    # merge savings onto master (with features)
+    abs_diff_with_master = pd.merge(left=abs_diff, right=master, how="left", left_index=True, right_index=True)
+    print(abs_diff_with_master.head().to_markdown())
+
+    # add some more features
+    abs_diff_with_master["std_by_mean"] = abs_diff_with_master["std_kw"] / abs_diff_with_master["mean_load_kw"]
+    abs_diff_with_master["std_by_peak"] = abs_diff_with_master["std_kw"] / abs_diff_with_master["peak_load_kw"]
+    abs_diff_with_master["peak_by_mean"] = abs_diff_with_master["peak_load_kw"] / abs_diff_with_master["mean_load_kw"]
+
+
     rel_diff = (baseline.drop(columns="name") - storage.drop(columns="name")) / baseline.drop(columns="name")
     # drop those that could not be optimized
     rel_diff.dropna(subset="total_yearly_costs_eur", inplace=True)
+
+    # merge savings onto master (with features)
+    rel_diff_with_master = pd.merge(left=rel_diff, right=master, how="left", left_index=True, right_index=True)
+    print(rel_diff_with_master.head().to_markdown())
+
+    # add some more features
+    rel_diff_with_master["std_by_mean"] = rel_diff_with_master["std_kw"] / rel_diff_with_master["mean_load_kw"]
+    rel_diff_with_master["std_by_peak"] = rel_diff_with_master["std_kw"] / rel_diff_with_master["peak_load_kw"]
+    rel_diff_with_master["peak_by_mean"] = rel_diff_with_master["peak_load_kw"] / rel_diff_with_master["mean_load_kw"]
 
     print("")
     print("################################")
     print("#     total yearly savings     #")
     print("################################")
     abs_yearly_savings = abs_diff["total_yearly_costs_eur"].copy()
-    abs_yearly_savings.name = "Total yearly savings in Eur"
+    abs_yearly_savings.name = "Total yearly savings in eur"
     print(abs_yearly_savings.describe().drop("count").to_markdown())
 
     total_yearly_savings_fig_df = abs_diff.copy()
@@ -166,7 +190,7 @@ def compare(uri: str, images_dir: str | Path):
         x="Savings",
         title="Total yearly savings")
     total_yearly_savings_fig.update_layout(xaxis_title="Total yearly savings in €", yaxis_title="")
-    total_yearly_savings_fig.update_xaxes(range=[0, 10000])
+    total_yearly_savings_fig.update_xaxes(range=[0, 8e3])
     total_yearly_savings_fig.write_image(f"{images_dir}/total_yearly_savings_box.pdf")
     total_yearly_savings_fig.show()
 
@@ -199,7 +223,7 @@ def compare(uri: str, images_dir: str | Path):
         x="Savings",
         title="Relative yearly savings")
     perc_yearly_savings_fig.update_layout(xaxis_title="Relative yearly savings in %", yaxis_title="")
-    perc_yearly_savings_fig.update_xaxes(range=[0, 6])
+    perc_yearly_savings_fig.update_xaxes(range=[0.25, 0.3])
     perc_yearly_savings_fig.write_image(f"{images_dir}/perc_yearly_savings_box.pdf")
     perc_yearly_savings_fig.show()
 
@@ -218,7 +242,7 @@ def compare(uri: str, images_dir: str | Path):
         x="Savings",
         title="Yearly capacity costs savings")
     total_cap_savings_fig.update_layout(xaxis_title="Savings in €", yaxis_title="")
-    total_cap_savings_fig.update_xaxes(range=[0, 10e3])
+    total_cap_savings_fig.update_xaxes(range=[0, 300])
     total_cap_savings_fig.write_image(f"{images_dir}/total_capacity_costs_savings_box.pdf")
     total_cap_savings_fig.show()
 
@@ -238,7 +262,7 @@ def compare(uri: str, images_dir: str | Path):
         x="Savings",
         title="Relative yearly capacity cost savings")
     rel_cap_savings_fig.update_layout(xaxis_title="Savings in %", yaxis_title="")
-    rel_cap_savings_fig.update_xaxes(range=[0, 50])
+    rel_cap_savings_fig.update_xaxes(range=[0, 5])
     rel_cap_savings_fig.write_image(f"{images_dir}/rel_capacity_costs_savings_box.pdf")
     rel_cap_savings_fig.show()
 
@@ -246,15 +270,6 @@ def compare(uri: str, images_dir: str | Path):
     print("#################################")
     print("# absolute correlation analysis #")
     print("#################################")
-    # merge savings onto master (with features)
-    abs_diff_with_master = pd.merge(left=abs_diff, right=master, how="left", left_index=True, right_index=True)
-    print(abs_diff_with_master.head())
-
-    # add some more features
-    abs_diff_with_master["std_by_mean"] = abs_diff_with_master["std_kw"] / abs_diff_with_master["mean_load_kw"]
-    abs_diff_with_master["std_by_peak"] = abs_diff_with_master["std_kw"] / abs_diff_with_master["peak_load_kw"]
-    abs_diff_with_master["peak_by_mean"] = abs_diff_with_master["peak_load_kw"] / abs_diff_with_master["mean_load_kw"]
-
     # generate correlation df
     cols_to_drop = [
         "grid_level",
@@ -296,15 +311,6 @@ def compare(uri: str, images_dir: str | Path):
     print("#################################")
     print("# relative correlation analysis #")
     print("#################################")
-    # merge savings onto master (with features)
-    rel_diff_with_master = pd.merge(left=rel_diff, right=master, how="left", left_index=True, right_index=True)
-    rel_diff_with_master.head()
-
-    # add some more features
-    rel_diff_with_master["std_by_mean"] = rel_diff_with_master["std_kw"] / rel_diff_with_master["mean_load_kw"]
-    rel_diff_with_master["std_by_peak"] = rel_diff_with_master["std_kw"] / rel_diff_with_master["peak_load_kw"]
-    rel_diff_with_master["peak_by_mean"] = rel_diff_with_master["peak_load_kw"] / rel_diff_with_master["mean_load_kw"]
-
     # matrix plot showing relative correlations
     cols_to_drop = [
         "grid_level",
@@ -360,8 +366,8 @@ if __name__ == "__main__":
     # load DB URI
     uri = os.getenv("DB_URI")
 
-    images_dir = Path(__file__).parent / Path("images")
+    images_dir = Path(__file__).parent / Path("images") / Path("only_under_2500h")
     if not os.path.exists(images_dir):
-        os.mkdir(images_dir)
+        os.makedirs(images_dir)
 
     compare(uri=uri, images_dir=images_dir)
