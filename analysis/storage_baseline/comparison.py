@@ -9,6 +9,9 @@ import numpy as np
 from dotenv import load_dotenv
 load_dotenv()
 
+import plotly.io as pio
+pio.renderers.default = "browser"
+
 
 def compare(uri: str, images_dir: str | Path):
 
