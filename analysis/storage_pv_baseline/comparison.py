@@ -298,6 +298,12 @@ def compare(uri: str, images_dir: str | Path):
 
     print(df.sort_values("corr", ascending=False, ignore_index=True).to_markdown())
 
+    fig = px.histogram(rel_diff_with_master.copy() * 100, "total_yearly_costs_eur", color="is_over_2500h", title="Distributions of relative savings")
+    fig.update_xaxes(title="Savings in %")
+    fig.show()
+    fig.write_image(f"{images_dir}/savings_dist_hist.pdf")
+
+
 if __name__ == "__main__":
 
     # load DB uri
