@@ -223,6 +223,23 @@ def compare(uri: str, images_dir: str | Path):
 
     print("")
     print("#####################################")
+    print("#       savings distribution        #")
+    print("#####################################")
+    savings_hist_fig_df = rel_diff_with_master.copy() * 100
+    savings_hist_fig_df["is_over_2500h"] = savings_hist_fig_df["is_over_2500h"].astype(bool)
+
+    savings_hist = px.histogram(
+        data_frame=savings_hist_fig_df,
+        x="total_yearly_costs_eur",
+        color="is_over_2500h",
+        barmode="group",
+        title="Distribution of relative yearly savings")
+    savings_hist.update_xaxes(range=[0, 10], title="Savings in %")
+    savings_hist.write_image(f"{images_dir}/savings_dist_hist.pdf")
+    savings_hist.show()
+
+    print("")
+    print("#####################################")
     print("# total grid capacity costs savings #")
     print("#####################################")
     abs_cap_costs_yearly_savings = abs_diff["grid_capacity_costs_eur"].copy()
