@@ -142,7 +142,7 @@ def compare(uri: str, images_dir: str | Path):
     print(rel_diff.head().to_markdown())
 
     abs_yearly_savings = abs_diff["total_yearly_costs_eur"].copy()
-    abs_yearly_savings.name = "Total yearly savings in Eur"
+    abs_yearly_savings.name = "Total yearly savings in eur"
     print(abs_yearly_savings.describe().drop("count").to_markdown())
 
     abs_tot_yearly_savings_fig_df = abs_diff.copy()
